@@ -6,6 +6,7 @@ import { baseOpenGraph } from '@/shared/metadata';
 import type { Metadata } from 'next';
 import { Fleur_De_Leah, Inter } from 'next/font/google';
 import NextjsTopLoader from 'nextjs-toploader';
+import { Suspense } from 'react';
 
 import './globals.css';
 
@@ -39,12 +40,14 @@ export default function RootLayout({
     <html suppressHydrationWarning lang="en">
       <body className={cn('min-h-screen font-cormorant antialiased', cormorant.className, fleurDeLeah.variable)}>
         <NextjsTopLoader height={2} showSpinner={false} color="hsl(var(--primary))" />
-        <TanstackProvider>
-          <ThemeProvider>
-            {children}
-            <Toaster />
-          </ThemeProvider>
-        </TanstackProvider>
+        <Suspense fallback={<div className="opacity-0" aria-hidden />}>
+          <TanstackProvider>
+            <ThemeProvider>
+              {children}
+              <Toaster />
+            </ThemeProvider>
+          </TanstackProvider>
+        </Suspense>
       </body>
     </html>
   );

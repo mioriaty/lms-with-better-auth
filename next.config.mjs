@@ -1,5 +1,8 @@
+import path from 'node:path';
+
 /** @type {import("next").NextConfig} */
 const nextConfig = {
+  cacheComponents: true,
   images: {
     remotePatterns: [
       {
@@ -7,6 +10,10 @@ const nextConfig = {
         pathname: '/**'
       }
     ]
+  },
+  turbopack: {
+    // dùng cwd thay cho __dirname trong ESM
+    root: path.join(process.cwd())
   }
 };
 

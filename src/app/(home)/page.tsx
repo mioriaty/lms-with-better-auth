@@ -4,8 +4,9 @@ import { Button } from '@/libs/components/ui/button';
 import { headers } from 'next/headers';
 
 const HomePage = async () => {
+  const headerStore = await headers();
   const session = await auth.api.getSession({
-    headers: headers()
+    headers: headerStore
   });
 
   return (

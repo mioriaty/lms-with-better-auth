@@ -1,13 +1,17 @@
-import { isRedirectError } from 'next/dist/client/components/redirect';
+function isRedirectError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+  return (error as { digest?: string }).digest === 'NEXT_REDIRECT';
+}
 
-export const wrapServerApi = async <T>(fnc: () => Promise<T>) => {
-  let result = null;
+export async function wrapServerApi<T>(fnc: () => Promise<T>) {
   try {
-    result = await fnc();
+    return await fnc();
   } catch (error) {
     if (isRedirectError(error)) {
       throw error;
     }
+    return null;
   }
-  return result;
-};
+}
