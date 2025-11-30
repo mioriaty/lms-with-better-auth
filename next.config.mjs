@@ -8,6 +8,10 @@ const nextConfig = {
       {
         hostname: 'res.cloudinary.com',
         pathname: '/**'
+      },
+      {
+        hostname: 'avatars.githubusercontent.com',
+        pathname: '/**'
       }
     ]
   },
