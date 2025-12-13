@@ -12,6 +12,11 @@ const nextConfig = {
       {
         hostname: 'avatars.githubusercontent.com',
         pathname: '/**'
+      },
+      {
+        hostname: 'learning-lms.t3.storage.dev',
+        pathname: '/**',
+        protocol: 'https'
       }
     ]
   },

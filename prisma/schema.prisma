@@ -11,7 +11,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -24,6 +23,12 @@ model User {
   updatedAt     DateTime  @default(now()) @updatedAt
   sessions      Session[]
   accounts      Account[]
+  courses       Course[]
+
+  role       String?
+  banned     Boolean?  @default(false)
+  banReason  String?
+  banExpires DateTime?
 
   @@unique([email])
   @@map("user")
@@ -40,12 +45,15 @@ model Session {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  impersonatedBy String?
+
   @@unique([token])
   @@map("session")
+  @@index([userId])
 }
 
 model Account {
-  id                    String    @id
+  id                    String    @id @default(uuid())
   accountId             String
   providerId            String
   userId                String
@@ -61,10 +69,11 @@ model Account {
   updatedAt             DateTime  @updatedAt
 
   @@map("account")
+  @@index([userId])
 }
 
 model Verification {
-  id         String   @id
+  id         String   @id @default(uuid())
   identifier String
   value      String
   expiresAt  DateTime
@@ -72,4 +81,73 @@ model Verification {
   updatedAt  DateTime @default(now()) @updatedAt
 
   @@map("verification")
+  @@index([identifier])
+}
+
+model Course {
+  id          String       @id @default(uuid())
+  title       String       @unique
+  slug        String       @unique
+  description String?
+  excerpt     String?
+  fileKey     String
+  price       Int
+  duration    Int
+  level       CourseLevel  @default(BEGINNER)
+  category    String
+  status      CourseStatus @default(DRAFT)
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapters    Chapter[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("course")
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Chapter {
+  id String @id @default(uuid())
+  title String
+  position Int
+
+  lessons Lesson[]
+
+  courseId String
+  course Course @relation(fields: [courseId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("chapter")
+}
+
+
+model Lesson {
+  id String @id @default(uuid())
+  title String
+  description String?
+  thumbnailUrl String?
+  videoUrl String?
+  position Int
+
+  chapterId String
+  chapter Chapter @relation(fields: [chapterId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("lesson")
 }

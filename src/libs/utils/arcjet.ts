@@ -1,3 +1,5 @@
+import 'server-only';
+
 import { envConfig } from '@/config';
 import arcjet, { detectBot, fixedWindow, protectSignup, sensitiveInfo, shield, slidingWindow } from '@arcjet/next';
 

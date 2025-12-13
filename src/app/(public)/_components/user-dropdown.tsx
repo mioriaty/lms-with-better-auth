@@ -11,11 +11,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/libs/components/ui/dropdown-menu';
-import { authClient } from '@/libs/utils/auth-client';
+import { useLogout } from '@/libs/hooks/use-logout';
 import { BookOpenIcon, HomeIcon, LayoutDashboardIcon, LogOutIcon } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
 
 interface UserDropdownProps {
   name: string;
@@ -24,21 +22,7 @@ interface UserDropdownProps {
 }
 
 const UserDropdown = ({ name, email, image }: UserDropdownProps) => {
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          router.push('/');
-          toast.success('Logged out successfully');
-        },
-        onError: (error) => {
-          toast.error(error.error.message);
-        }
-      }
-    });
-  };
+  const handleLogout = useLogout();
 
   return (
     <DropdownMenu>
@@ -74,7 +58,7 @@ const UserDropdown = ({ name, email, image }: UserDropdownProps) => {
           </DropdownMenuItem>
 
           <DropdownMenuItem className="space-x-2" asChild>
-            <Link href="/dashboard">
+            <Link href="/admin">
               <LayoutDashboardIcon size={16} className="opacity-60" aria-hidden="true" />
               <span className="text-popover-foreground">Dashboard</span>
             </Link>

@@ -346,7 +346,7 @@ export function DataTable({ data: initialData }: { data: z.infer<typeof schema>[
 
   return (
     <Tabs defaultValue="outline" className="flex w-full flex-col justify-start gap-6">
-      <div className="flex items-center justify-between px-4 lg:px-6">
+      <div className="flex items-center justify-between">
         <Label htmlFor="view-selector" className="sr-only">
           View
         </Label>
@@ -417,7 +417,7 @@ export function DataTable({ data: initialData }: { data: z.infer<typeof schema>[
           </Button>
         </div>
       </div>
-      <TabsContent value="outline" className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
+      <TabsContent value="outline" className="relative flex flex-col gap-4 overflow-auto">
         <div className="overflow-hidden rounded-lg border">
           <DndContext
             collisionDetection={closestCenter}
@@ -460,7 +460,7 @@ export function DataTable({ data: initialData }: { data: z.infer<typeof schema>[
             </Table>
           </DndContext>
         </div>
-        <div className="flex items-center justify-between px-4">
+        <div className="flex items-center justify-between">
           <div className="hidden flex-1 text-sm text-muted-foreground lg:flex">
             {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} row(s)
             selected.
@@ -535,13 +535,13 @@ export function DataTable({ data: initialData }: { data: z.infer<typeof schema>[
           </div>
         </div>
       </TabsContent>
-      <TabsContent value="past-performance" className="flex flex-col px-4 lg:px-6">
+      <TabsContent value="past-performance" className="flex flex-col">
         <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
       </TabsContent>
-      <TabsContent value="key-personnel" className="flex flex-col px-4 lg:px-6">
+      <TabsContent value="key-personnel" className="flex flex-col">
         <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
       </TabsContent>
-      <TabsContent value="focus-documents" className="flex flex-col px-4 lg:px-6">
+      <TabsContent value="focus-documents" className="flex flex-col">
         <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
       </TabsContent>
     </Tabs>

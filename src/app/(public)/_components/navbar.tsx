@@ -10,8 +10,8 @@ import UserDropdown from '@/app/(public)/_components/user-dropdown';
 
 const navigationItems = [
   { name: 'Home', href: '/' },
-  { name: 'Courses', href: '/courses' },
-  { name: 'Dashboard', href: '/dashboard' }
+  { name: 'Courses', href: '/admin/courses' },
+  { name: 'Dashboard', href: '/admin' }
 ];
 
 export default function Navbar() {
@@ -20,8 +20,17 @@ export default function Navbar() {
   const renderAuthButtons = () => {
     if (isPending) return null;
 
-    if (session)
-      return <UserDropdown name={session.user.name} email={session.user.email} image={session.user.image ?? ''} />;
+    if (session) {
+      return (
+        <UserDropdown
+          name={
+            session.user.name && session.user.name.length > 0 ? session.user.name : session?.user.email.split('@')[0]
+          }
+          email={session.user.email}
+          image={session?.user.image ?? `https://avatar.vercel.sh/${session?.user.email}`}
+        />
+      );
+    }
 
     return (
       <>
@@ -46,7 +55,7 @@ export default function Navbar() {
 
         {/* Desktop Navigation Menu */}
         <nav className="hidden md:flex md:flex-1 md:items-center md:justify-between w-full">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-6">
             {navigationItems.map((item) => (
               <Link
                 href={item.href}

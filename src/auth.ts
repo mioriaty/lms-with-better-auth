@@ -4,6 +4,7 @@ import { resend } from '@/libs/utils/resend';
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { emailOTP } from 'better-auth/plugins';
+import { admin } from 'better-auth/plugins';
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -25,6 +26,7 @@ export const auth = betterAuth({
           html: `<p>Your verification code is ${otp}</p>`
         });
       }
-    })
+    }),
+    admin()
   ]
 });

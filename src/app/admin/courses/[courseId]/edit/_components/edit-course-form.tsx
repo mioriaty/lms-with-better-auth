@@ -1,0 +1,299 @@
+'use client';
+
+import { AdminDetailCourse } from '@/data-access/admin/get-course';
+import {
+  CourseSchemaType,
+  courseCategories,
+  courseLevels,
+  courseSchema,
+  courseStatuses
+} from '@/data-access/schemas/course.schema';
+import { CourseLevel, CourseStatus } from '@/generated/prisma/enums';
+import { FileUploader } from '@/libs/components/file-uploader';
+import { RichEditor } from '@/libs/components/rich-editor';
+import { Button } from '@/libs/components/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/libs/components/ui/form';
+import { Input } from '@/libs/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/libs/components/ui/select';
+import { Textarea } from '@/libs/components/ui/textarea';
+import { toast } from '@/libs/components/ui/use-toast';
+import { slugify } from '@/libs/utils/slugify';
+import { tryCatch } from '@/libs/utils/try-catch';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { ArrowRightIcon, Loader2, SparklesIcon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useTransition } from 'react';
+import { useForm } from 'react-hook-form';
+
+import { editCourseAction } from '@/app/admin/courses/[courseId]/edit/actions';
+
+interface EditCourseFormProps {
+  course: AdminDetailCourse;
+}
+
+export function EditCourseForm({ course }: EditCourseFormProps) {
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
+  const form = useForm<CourseSchemaType>({
+    resolver: zodResolver(courseSchema),
+    defaultValues: {
+      title: course.title,
+      description: course.description || '',
+      excerpt: course.excerpt || '',
+      category: course.category as CourseSchemaType['category'],
+      slug: course.slug,
+      fileKey: course.fileKey || '',
+      price: course.price,
+      duration: course.duration,
+      level: course.level as CourseLevel,
+      status: course.status as CourseStatus
+    }
+  });
+
+  useEffect(() => {
+    if (!course) return;
+    form.reset({
+      title: course.title,
+      description: course.description || '',
+      excerpt: course.excerpt || '',
+      category: course.category as CourseSchemaType['category'],
+      slug: course.slug,
+      fileKey: course.fileKey || '',
+      price: course.price,
+      duration: course.duration,
+      level: course.level as CourseLevel,
+      status: course.status as CourseStatus
+    });
+  }, [course]);
+
+  const onSubmit = (values: CourseSchemaType) => {
+    startTransition(async () => {
+      const { data, error } = await tryCatch(editCourseAction(course.id, values));
+
+      if (error) {
+        toast({
+          title: 'Error',
+          description: error.message || 'An unexpected error occurred',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      if (data.status === 'success') {
+        toast({
+          title: 'Success',
+          description: data.message
+        });
+        router.push(`/admin/courses`);
+      } else if (data.status === 'error') {
+        toast({
+          title: 'Error',
+          description: data.message,
+          variant: 'destructive'
+        });
+      }
+    });
+  };
+
+  const generateSlug = () => {
+    const slug = slugify(form.getValues('title'));
+    form.setValue('slug', slug, { shouldValidate: true });
+  };
+
+  return (
+    <Form {...form}>
+      <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Title</FormLabel>
+              <FormControl>
+                <Input placeholder='e.g. "Introduction to React"' {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <div className="flex gap-4 items-end">
+          <FormField
+            control={form.control}
+            name="slug"
+            render={({ field }) => (
+              <FormItem className="w-full">
+                <FormLabel>Slug</FormLabel>
+                <FormControl>
+                  <Input placeholder='e.g. "introduction-to-react"' {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="button" onClick={generateSlug}>
+            Generate Slug <SparklesIcon className="ml-1 size-4" />
+          </Button>
+        </div>
+
+        <FormField
+          control={form.control}
+          name="excerpt"
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormLabel>Excerpt</FormLabel>
+              <FormControl>
+                <Textarea
+                  cols={30}
+                  rows={4}
+                  placeholder='e.g. "This course is about the basics of React"'
+                  className="min-h-[120px]"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <RichEditor onUpdate={field.onChange} content={field.value} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="fileKey"
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormLabel>Thumbnail</FormLabel>
+              <FormControl>
+                <FileUploader value={field.value} onChange={field.onChange} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="category"
+            render={({ field }) => (
+              <FormItem className="w-full">
+                <FormLabel>Category</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {courseCategories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="level"
+            render={({ field }) => (
+              <FormItem className="w-full">
+                <FormLabel>Level</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a level" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {courseLevels.map((level) => (
+                      <SelectItem key={level} value={level}>
+                        {level}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="duration"
+            render={({ field }) => (
+              <FormItem className="w-full">
+                <FormLabel>Duration (hours)</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder='e.g. "10"' {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="price"
+            render={({ field }) => (
+              <FormItem className="w-full">
+                <FormLabel>Price (USD)</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder='e.g. "99.99"' {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormLabel>Status</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a status" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {courseStatuses.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <Button type="submit" disabled={isPending}>
+          Update Course{' '}
+          {isPending ? <Loader2 className="ml-1 size-4 animate-spin" /> : <ArrowRightIcon className="ml-1 size-4" />}
+        </Button>
+      </form>
+    </Form>
+  );
+}

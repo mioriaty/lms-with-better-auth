@@ -1,9 +1,8 @@
 'use client';
 
-import { NavDocuments } from '@/libs/components/nav-documents';
-import { NavMain } from '@/libs/components/nav-main';
-import { NavSecondary } from '@/libs/components/nav-secondary';
-import { NavUser } from '@/libs/components/nav-user';
+import { NavMain } from '@/libs/components/dashboard-sidebar/nav-main';
+import { NavSecondary } from '@/libs/components/dashboard-sidebar/nav-secondary';
+import { NavUser } from '@/libs/components/dashboard-sidebar/nav-user';
 import {
   Sidebar,
   SidebarContent,
@@ -14,40 +13,33 @@ import {
   SidebarMenuItem
 } from '@/libs/components/ui/sidebar';
 import {
-  ArrowUpCircleIcon,
   BarChartIcon,
+  BookIcon,
   CameraIcon,
-  ClipboardListIcon,
-  DatabaseIcon,
   FileCodeIcon,
-  FileIcon,
   FileTextIcon,
   FolderIcon,
   HelpCircleIcon,
   LayoutDashboardIcon,
-  ListIcon,
   SearchIcon,
   SettingsIcon,
   UsersIcon
 } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
 import * as React from 'react';
 
 const data = {
-  user: {
-    name: 'shadcn',
-    email: 'm@example.com',
-    avatar: '/avatars/shadcn.jpg'
-  },
   navMain: [
     {
       title: 'Dashboard',
-      url: '#',
+      url: '/admin',
       icon: LayoutDashboardIcon
     },
     {
-      title: 'Lifecycle',
-      url: '#',
-      icon: ListIcon
+      title: 'Courses',
+      url: '/admin/courses',
+      icon: BookIcon
     },
     {
       title: 'Analytics',
@@ -129,23 +121,6 @@ const data = {
       url: '#',
       icon: SearchIcon
     }
-  ],
-  documents: [
-    {
-      name: 'Data Library',
-      url: '#',
-      icon: DatabaseIcon
-    },
-    {
-      name: 'Reports',
-      url: '#',
-      icon: ClipboardListIcon
-    },
-    {
-      name: 'Word Assistant',
-      url: '#',
-      icon: FileIcon
-    }
   ]
 };
 
@@ -156,21 +131,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
-              <a href="#">
-                <ArrowUpCircleIcon className="h-5 w-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
-              </a>
+              <Link href="/">
+                <Image src="/icon.png" alt="Logo" width={20} height={20} className="size-5" />
+                <span className="text-base font-semibold">LMS</span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   );
