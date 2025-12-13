@@ -16,14 +16,14 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/libs/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/libs/components/ui/select';
 import { Textarea } from '@/libs/components/ui/textarea';
-import { toast } from '@/libs/components/ui/use-toast';
 import { slugify } from '@/libs/utils/slugify';
 import { tryCatch } from '@/libs/utils/try-catch';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowRightIcon, Loader2, SparklesIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useTransition } from 'react';
+import { FC, useEffect, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
 import { editCourseAction } from '@/app/admin/courses/[courseId]/edit/actions';
 
@@ -31,7 +31,7 @@ interface EditCourseFormProps {
   course: AdminDetailCourse;
 }
 
-export function EditCourseForm({ course }: EditCourseFormProps) {
+export const EditCourseForm: FC<EditCourseFormProps> = ({ course }) => {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -72,26 +72,15 @@ export function EditCourseForm({ course }: EditCourseFormProps) {
       const { data, error } = await tryCatch(editCourseAction(course.id, values));
 
       if (error) {
-        toast({
-          title: 'Error',
-          description: error.message || 'An unexpected error occurred',
-          variant: 'destructive'
-        });
+        toast.error(error.message || 'An unexpected error occurred');
         return;
       }
 
       if (data.status === 'success') {
-        toast({
-          title: 'Success',
-          description: data.message
-        });
+        toast.success(data.message);
         router.push(`/admin/courses`);
       } else if (data.status === 'error') {
-        toast({
-          title: 'Error',
-          description: data.message,
-          variant: 'destructive'
-        });
+        toast.error(data.message);
       }
     });
   };
@@ -296,4 +285,4 @@ export function EditCourseForm({ course }: EditCourseFormProps) {
       </form>
     </Form>
   );
-}
+};

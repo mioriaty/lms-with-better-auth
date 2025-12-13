@@ -1,4 +1,4 @@
-import { Toaster } from '@/libs/components/ui/toaster';
+import { Toaster } from '@/libs/components/ui/sonner';
 import { TanstackProvider } from '@/libs/providers/tanstack-query';
 import { ThemeProvider } from '@/libs/providers/theme-provider';
 import { cn } from '@/libs/utils/string';
@@ -44,7 +44,7 @@ export default function RootLayout({
           <TanstackProvider>
             <ThemeProvider>
               {children}
-              <Toaster />
+              <Toaster position="top-right" closeButton duration={2000} />
             </ThemeProvider>
           </TanstackProvider>
         </Suspense>

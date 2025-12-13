@@ -13,5 +13,6 @@
   "aliases": {
     "components": "@/libs/components",
     "utils": "@/libs/utils/string"
-  }
+  },
+  "iconLibrary": "lucide"
 }
