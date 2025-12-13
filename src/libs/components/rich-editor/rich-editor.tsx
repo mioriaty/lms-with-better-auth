@@ -1,7 +1,6 @@
 'use client';
 
 import { MenuBar } from '@/libs/components/rich-editor/menu-bar';
-import ListItem from '@tiptap/extension-list-item';
 import TextAlign from '@tiptap/extension-text-align';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -16,7 +15,6 @@ const RichEditor: FC<RichEditorProps> = ({ content = '', onUpdate }) => {
   const editor = useEditor({
     extensions: [
       StarterKit,
-      ListItem,
       TextAlign.configure({
         types: ['heading', 'paragraph']
       })

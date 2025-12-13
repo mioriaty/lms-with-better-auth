@@ -2,7 +2,7 @@ import { cn } from '@/libs/utils/string';
 import { DraggableSyntheticListeners } from '@dnd-kit/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ReactNode } from 'react';
+import { CSSProperties, ReactNode } from 'react';
 
 interface SortableItemProps {
   id: string;
@@ -17,9 +17,11 @@ interface SortableItemProps {
 export function SortableItem({ children, id, className, data }: SortableItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, data });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition
+  const style: CSSProperties = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    position: 'relative',
+    zIndex: isDragging ? 999 : undefined
   };
 
   return (
@@ -27,8 +29,7 @@ export function SortableItem({ children, id, className, data }: SortableItemProp
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
-      className={cn('touch-none', className, isDragging ? 'z-10' : '')}
+      className={cn(className, isDragging ? 'opacity-80 shadow-lg' : '')}
     >
       {children(listeners)}
     </div>

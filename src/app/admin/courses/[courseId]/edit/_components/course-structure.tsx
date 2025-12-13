@@ -24,6 +24,10 @@ import Link from 'next/link';
 import { FC, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { DeleteChapter } from '@/app/admin/courses/[courseId]/edit/_components/delete-chapter';
+import { DeleteLesson } from '@/app/admin/courses/[courseId]/edit/_components/delete-lesson';
+import { NewChapterModal } from '@/app/admin/courses/[courseId]/edit/_components/new-chapter-modal';
+import { NewLessonModal } from '@/app/admin/courses/[courseId]/edit/_components/new-lesson.modal';
 import { SortableItem } from '@/app/admin/courses/[courseId]/edit/_components/sortable-item';
 import { reorderChapters, reorderLessons } from '@/app/admin/courses/[courseId]/edit/actions';
 
@@ -128,10 +132,11 @@ export const CourseStructure: FC<CourseStructureProps> = ({ data }) => {
         toast.promise(reorderChaptersPromise, {
           loading: 'Reordering chapters...',
           success: (result) => {
-            if (result.status === 'error') return result.message;
+            if (result.status === 'success') return result.message;
             throw new Error(result.message);
           },
-          error: () => {
+          error: (error) => {
+            console.error(123, error);
             setItems(previousChapters);
             return 'Failed to reorder chapters';
           }
@@ -193,12 +198,14 @@ export const CourseStructure: FC<CourseStructureProps> = ({ data }) => {
         toast.promise(reorderLessonsPromise, {
           loading: 'Reordering lessons...',
           success: (result) => {
-            if (result.status === 'error') return result.message;
+            if (result.status === 'success') return result.message;
             throw new Error(result.message);
           },
-          error: () => {
+          error: (error) => {
+            console.error(123, error);
             setItems(previousChapters);
-            return 'Failed to reorder lessons';
+            toast.error('Failed to reorder lessons');
+            return;
           }
         });
       }
@@ -222,14 +229,15 @@ export const CourseStructure: FC<CourseStructureProps> = ({ data }) => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between border-b border-border">
           <CardTitle>Chapters</CardTitle>
+          <NewChapterModal courseId={data.id} />
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="pt-6 space-y-4">
           <SortableContext strategy={verticalListSortingStrategy} items={items}>
             {items.map((chapter) => (
               <SortableItem key={chapter.id} data={{ type: 'chapter' }} id={chapter.id}>
                 {(listeners) => (
-                  <Card>
+                  <Card className="shadow-none rounded-sm">
                     <Collapsible open={chapter.isOpen} onOpenChange={() => handleChapterToggle(chapter.id)}>
                       <div className="flex items-center justify-between p-3 border-b border-border">
                         <div className="flex items-center justify-between w-full gap-2">
@@ -237,7 +245,7 @@ export const CourseStructure: FC<CourseStructureProps> = ({ data }) => {
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="cursor-grab opacity-60 hover:opacity-100"
+                              className="cursor-grab opacity-60 hover:opacity-100 touch-none"
                               {...listeners}
                             >
                               <GripVerticalIcon className="size-4" />
@@ -247,9 +255,7 @@ export const CourseStructure: FC<CourseStructureProps> = ({ data }) => {
                           </div>
 
                           <div className="flex items-center gap-2">
-                            <Button size="icon" variant="destructive">
-                              <TrashIcon className="size-4" />
-                            </Button>
+                            <DeleteChapter chapterId={chapter.id} courseId={data.id} />
 
                             <CollapsibleTrigger asChild>
                               <Button size="icon" variant="ghost">
@@ -265,7 +271,7 @@ export const CourseStructure: FC<CourseStructureProps> = ({ data }) => {
                       </div>
 
                       <CollapsibleContent>
-                        <div className="p-1">
+                        <div className="p-1 pl-8">
                           <SortableContext
                             strategy={verticalListSortingStrategy}
                             items={chapter.lessons.map((lesson) => lesson.id)}
@@ -279,18 +285,21 @@ export const CourseStructure: FC<CourseStructureProps> = ({ data }) => {
                                 {(lessonListeners) => (
                                   <div className="flex items-center justify-between w-full gap-2 hover:bg-accent rounded-sm p-2">
                                     <div className="flex items-center gap-2">
-                                      <Button size="icon" variant="ghost" {...lessonListeners}>
+                                      <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="cursor-grab touch-none"
+                                        {...lessonListeners}
+                                      >
                                         <GripVerticalIcon className="size-4" />
                                       </Button>
-                                      <FileText />
+                                      <FileText className="size-4" />
                                       <Link href={`/admin/courses/${data.id}/${chapter.id}/${lesson.id}`}>
                                         {lesson.title}
                                       </Link>
                                     </div>
 
-                                    <Button size="icon" variant={'outline'}>
-                                      <TrashIcon className="size-4" />
-                                    </Button>
+                                    <DeleteLesson chapterId={chapter.id} courseId={data.id} lessonId={lesson.id} />
                                   </div>
                                 )}
                               </SortableItem>
@@ -298,9 +307,7 @@ export const CourseStructure: FC<CourseStructureProps> = ({ data }) => {
                           </SortableContext>
 
                           <div className="p-2">
-                            <Button size="icon" variant={'outline'} className="w-full">
-                              <PlusIcon className="size-4" /> Add Lesson
-                            </Button>
+                            <NewLessonModal courseId={data.id} chapterId={chapter.id} />
                           </div>
                         </div>
                       </CollapsibleContent>
