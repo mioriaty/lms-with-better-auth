@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/eslintrc",
   "root": true,
   "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint", "prettier"],
+  "plugins": ["@typescript-eslint", "prettier", "react-hooks"],
   "extends": [
     "next",
     "eslint:recommended",
@@ -18,7 +18,10 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx"],
-      "parser": "@typescript-eslint/parser"
+      "parser": "@typescript-eslint/parser",
+      "rules": {
+        "react-hooks/exhaustive-deps": "warn"
+      }
     }
   ],
   "rules": {
@@ -32,7 +35,13 @@
     "no-console": 1,
     "no-extra-boolean-cast": 0,
     "no-lonely-if": 1,
-    "no-unused-vars": ["warn", { "args": "none", "varsIgnorePattern": "^_" }],
+    "no-unused-vars": [
+      "warn",
+      {
+        "args": "none",
+        "varsIgnorePattern": "^_"
+      }
+    ],
     "no-trailing-spaces": 1,
     "no-multi-spaces": 1,
     "no-multiple-empty-lines": 1,

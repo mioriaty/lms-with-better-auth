@@ -19,7 +19,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy
 } from '@dnd-kit/sortable';
-import { ChevronDownIcon, ChevronRightIcon, FileText, GripVerticalIcon, PlusIcon, TrashIcon } from 'lucide-react';
+import { ChevronDownIcon, ChevronRightIcon, FileText, GripVerticalIcon } from 'lucide-react';
 import Link from 'next/link';
 import { FC, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -135,8 +135,7 @@ export const CourseStructure: FC<CourseStructureProps> = ({ data }) => {
             if (result.status === 'success') return result.message;
             throw new Error(result.message);
           },
-          error: (error) => {
-            console.error(123, error);
+          error: () => {
             setItems(previousChapters);
             return 'Failed to reorder chapters';
           }
@@ -201,11 +200,9 @@ export const CourseStructure: FC<CourseStructureProps> = ({ data }) => {
             if (result.status === 'success') return result.message;
             throw new Error(result.message);
           },
-          error: (error) => {
-            console.error(123, error);
+          error: () => {
             setItems(previousChapters);
-            toast.error('Failed to reorder lessons');
-            return;
+            return 'Failed to reorder lessons';
           }
         });
       }
