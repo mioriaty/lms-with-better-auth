@@ -1,12 +1,11 @@
 import { envConfig } from '@/config';
 import { requireAdmin } from '@/data-access/admin/require-admin';
-import { fileUploadSchema } from '@/data-access/schemas/file-upload.schema';
+import { multipartPartSchema } from '@/data-access/schemas/multipart-upload.schema';
 import arcjet, { detectBot, fixedWindow } from '@/libs/utils/arcjet';
 import { S3 } from '@/libs/utils/s3-client';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { UploadPartCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { NextResponse } from 'next/server';
-import { v4 as uuidv4 } from 'uuid';
 
 const aj = arcjet
   .withRule(
@@ -19,7 +18,7 @@ const aj = arcjet
     fixedWindow({
       mode: 'LIVE',
       window: '1m',
-      max: 5
+      max: 20
     })
   );
 
@@ -36,38 +35,30 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-
-    const validation = fileUploadSchema.safeParse(body);
+    const validation = multipartPartSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
 
-    const { contentType, fileName, size } = validation.data;
+    const { key, uploadId, partNumber } = validation.data;
 
-    const uniqueKey = `${uuidv4()}-${fileName}`;
-
-    const command = new PutObjectCommand({
+    const command = new UploadPartCommand({
       Bucket: envConfig.NEXT_PUBLIC_S3_BUCKET_NAME_IMAGES,
-      ContentType: contentType,
-      ContentLength: size,
-      Key: uniqueKey
+      Key: key,
+      UploadId: uploadId,
+      PartNumber: partNumber
     });
 
-    const expiresIn = size > 50 * 1024 * 1024 ? 30 * 60 : 6 * 60; // 30 mins for large files, 6 mins for small files
+    const presignedUrl = await getSignedUrl(S3, command, {
+      expiresIn: 60 * 60 // 1 hour for each part
+    });
 
-    const presignedUrl = await getSignedUrl(S3, command, { expiresIn });
-
-    const response = {
-      presignedUrl,
-      key: uniqueKey
-    };
-
-    return NextResponse.json(response, { status: 200 });
+    return NextResponse.json({ presignedUrl, partNumber });
   } catch (error) {
-    console.error('S3 upload error:', error);
+    console.error('Multipart part error:', error);
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Failed to get part URL', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

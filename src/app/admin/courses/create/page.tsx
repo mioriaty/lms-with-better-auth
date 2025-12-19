@@ -16,6 +16,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/libs/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/libs/components/ui/select';
 import { Textarea } from '@/libs/components/ui/textarea';
+import { useConfetti } from '@/libs/hooks/use-confetti';
 import { slugify } from '@/libs/utils/slugify';
 import { tryCatch } from '@/libs/utils/try-catch';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -31,6 +32,7 @@ import { CreateCourseAction } from '@/app/admin/courses/create/actions';
 export default function CourseCreationPage() {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const { triggerConfetti } = useConfetti();
 
   const form = useForm<CourseSchemaType>({
     resolver: zodResolver(courseSchema),
@@ -57,6 +59,7 @@ export default function CourseCreationPage() {
       }
       if (data.status === 'success') {
         toast.success(data.message);
+        triggerConfetti();
         form.reset();
         router.push('/admin/courses');
       } else if (data.status === 'error') {

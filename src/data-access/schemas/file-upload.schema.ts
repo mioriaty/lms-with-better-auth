@@ -6,7 +6,7 @@ export const fileUploadSchema = z.object({
   size: z
     .number()
     .min(1, { message: 'Size is required' })
-    .max(5 * 1024 * 1024, { message: 'File size must be less than 5MB' }),
+    .max(1000 * 1024 * 1024, { message: 'File size must be less than 1000MB' }),
   isImage: z.boolean()
 });
 

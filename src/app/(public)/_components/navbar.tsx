@@ -10,7 +10,7 @@ import UserDropdown from '@/app/(public)/_components/user-dropdown';
 
 const navigationItems = [
   { name: 'Home', href: '/' },
-  { name: 'Courses', href: '/admin/courses' },
+  { name: 'Courses', href: '/courses' },
   { name: 'Dashboard', href: '/admin' }
 ];
 

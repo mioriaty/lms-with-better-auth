@@ -1,5 +1,6 @@
 'use client';
 
+import { uploadLargeFile } from '@/libs/components/file-uploader/multipart-upload';
 import { EmptyState, ErrorState, UploadedState, UploadingState } from '@/libs/components/file-uploader/render-state';
 import { Card, CardContent } from '@/libs/components/ui/card';
 import { constructUrl } from '@/libs/hooks/use-construct-url';
@@ -40,6 +41,73 @@ export const FileUploader: FC<FileUploaderProps> = ({ onChange, value, fileTypeA
     fileType: fileTypeAccepted
   });
 
+  const uploadSmallFile = useCallback(
+    async (file: File): Promise<string> => {
+      // 1. Get the presigned url from the server
+      const presignedUrlResponse = await fetch('/api/s3/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contentType: file.type,
+          fileName: file.name,
+          size: file.size,
+          isImage: fileTypeAccepted === 'image'
+        })
+      });
+
+      if (!presignedUrlResponse.ok) {
+        const errorData = await presignedUrlResponse.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to get presigned url');
+      }
+
+      const { presignedUrl, key } = await presignedUrlResponse.json();
+
+      // 2. Upload the file to the S3 bucket
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+
+        // Update the progress
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percentCompleted = Math.round((event.loaded / event.total) * 100);
+            setFileState((prev) => ({
+              ...prev,
+              progress: percentCompleted
+            }));
+          }
+        };
+
+        // On load
+        xhr.onload = () => {
+          if (xhr.status === 200 || xhr.status === 204) {
+            resolve();
+          } else {
+            reject(new Error('Failed to upload file'));
+          }
+        };
+
+        // On error
+        xhr.onerror = () => {
+          reject(new Error('Failed to upload file'));
+        };
+
+        // Open the PUT request
+        xhr.open('PUT', presignedUrl);
+
+        // Set the headers
+        xhr.setRequestHeader('Content-Type', file.type);
+
+        // Send the file
+        xhr.send(file);
+      });
+
+      return key;
+    },
+    [fileTypeAccepted]
+  );
+
   const uploadFile = useCallback(
     async (file: File) => {
       setFileState((prev) => ({
@@ -49,91 +117,39 @@ export const FileUploader: FC<FileUploaderProps> = ({ onChange, value, fileTypeA
       }));
 
       try {
-        // 1. Get the presigned url from the server
-        const presignedUrlResponse = await fetch('/api/s3/upload', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            contentType: file.type,
-            fileName: file.name,
-            size: file.size,
-            isImage: fileTypeAccepted === 'image'
-          })
-        });
+        const LARGE_FILE_THRESHOLD = 50 * 1024 * 1024; // 50MB
+        let key: string;
 
-        if (!presignedUrlResponse.ok) {
-          toast.error('Failed to get presigned url.');
-          setFileState((prev) => ({
-            ...prev,
-            uploading: false,
-            progress: 0,
-            error: true
-          }));
-          return;
+        if (file.size >= LARGE_FILE_THRESHOLD) {
+          // Use multipart upload for large files
+          key = await uploadLargeFile(file, (progress) => {
+            setFileState((prev) => ({ ...prev, progress }));
+          });
+        } else {
+          // Use existing single upload for small files
+          key = await uploadSmallFile(file);
         }
 
-        const { presignedUrl, key } = await presignedUrlResponse.json();
-
-        // 2. Upload the file to the S3 bucket
-        await new Promise<void>((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-
-          // Update the progress
-          xhr.upload.onprogress = (event) => {
-            if (event.lengthComputable) {
-              const percentCompleted = Math.round((event.loaded / event.total) * 100);
-              setFileState((prev) => ({
-                ...prev,
-                progress: percentCompleted
-              }));
-            }
-          };
-
-          // On load
-          xhr.onload = () => {
-            if (xhr.status === 200 || xhr.status === 204) {
-              setFileState((prev) => ({
-                ...prev,
-                progress: 100,
-                uploading: false,
-                key
-              }));
-              onChange?.(key);
-              toast.success('File uploaded successfully.');
-              resolve();
-            } else {
-              reject(new Error('Failed to upload file.'));
-            }
-          };
-
-          // On error
-          xhr.onerror = () => {
-            reject(new Error('Failed to upload file.'));
-          };
-
-          // Open the PUT request
-          xhr.open('PUT', presignedUrl);
-
-          // Set the headers
-          xhr.setRequestHeader('Content-Type', file.type);
-
-          // Send the file
-          xhr.send(file);
-        });
+        setFileState((prev) => ({
+          ...prev,
+          progress: 100,
+          uploading: false,
+          key
+        }));
+        onChange?.(key);
+        toast.success('File uploaded successfully.');
       } catch (error) {
-        toast.error('Something went wrong');
+        const errorMessage = error instanceof Error ? error.message : 'Something went wrong';
+        toast.error(errorMessage);
         setFileState((prev) => ({
           ...prev,
           uploading: false,
           progress: 0,
           error: true
         }));
-        return;
       }
     },
-    [fileTypeAccepted, onChange]
+    [fileTypeAccepted, onChange, uploadSmallFile]
   );
 
   const handleDrop = useCallback(
@@ -229,7 +245,8 @@ export const FileUploader: FC<FileUploaderProps> = ({ onChange, value, fileTypeA
     }
 
     if (fileTooLarge) {
-      toast.error('File is too large. Maximum size is 5MB.');
+      const maxSize = fileTypeAccepted === 'video' ? '5GB' : '100MB';
+      toast.error(`File is too large. Maximum size is ${maxSize}.`);
     }
   }, []);
 
@@ -270,7 +287,7 @@ export const FileUploader: FC<FileUploaderProps> = ({ onChange, value, fileTypeA
     multiple: false,
     accept: fileTypeAccepted === 'video' ? { 'video/*': [] } : { 'image/*': [] },
     maxFiles: 1,
-    maxSize: fileTypeAccepted === 'video' ? 5000 * 1024 * 1024 : 5 * 1024 * 1024, // 5GB for video, 5MB for image
+    maxSize: fileTypeAccepted === 'video' ? 5000 * 1024 * 1024 : 100 * 1024 * 1024, // 5GB for video, 100MB for image
     onDrop: handleDrop,
     onDropRejected: handleRejectedFiles,
     disabled: fileState.uploading || !!fileState.objectUrl

@@ -8,6 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/libs/components/ui/dropdown-menu';
+import { Skeleton } from '@/libs/components/ui/skeleton';
 import { constructUrl } from '@/libs/hooks/use-construct-url';
 import { BookOpenIcon, ClockIcon, EllipsisVerticalIcon, EyeIcon, PencilIcon, TrashIcon } from 'lucide-react';
 import Image from 'next/image';
@@ -90,6 +91,26 @@ export function AdminCourseCard({ course }: AdminCourseCardProps) {
         >
           Edit Course <PencilIcon className="size-4" />
         </Link>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function AdminCourseCardSkeleton() {
+  return (
+    <Card className="group relative gap-0 py-0">
+      <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
+        <Skeleton className="size-8 rounded-md" />
+      </div>
+
+      <div className="w-full relative h-fit">
+        <Skeleton className="w-full rounded-t-lg aspect-video h-[400px] object-cover" />
+      </div>
+
+      <CardContent className="p-4 space-y-2">
+        <Skeleton className="h-6 w-full rounded-md" />
+        <Skeleton className="h-4 w-full rounded-md" />
+        <Skeleton className="h-10 w-full rounded-md" />
       </CardContent>
     </Card>
   );
